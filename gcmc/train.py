@@ -26,6 +26,7 @@ np.random.seed(seed)
 tf.set_random_seed(seed)
 
 # Settings
+# 如果用命令行调用，附带的参数在这里进行解析
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", type=str, default="ml_100k",
                 choices=['ml_100k', 'ml_1m', 'ml_10m', 'douban', 'yahoo_music', 'flixster'],
@@ -60,6 +61,7 @@ ap.add_argument("-sdir", "--summaries_dir", type=str, default='logs/' + str(date
                 help="Directory for saving tensorflow summaries.")
 
 # Boolean flags
+# 以下是一些互斥的标记，相当于单选，每组单选最后还能设置默认值
 fp = ap.add_mutually_exclusive_group(required=False)
 fp.add_argument('-nsym', '--norm_symmetric', dest='norm_symmetric',
                 help="Option to turn on symmetric global normalization", action='store_true')
@@ -114,6 +116,7 @@ SELFCONNECTIONS = False
 SPLITFROMFILE = True
 VERBOSE = True
 
+# ml-10m可能会耗尽内存，要谨慎使用
 if DATASET == 'ml_1m' or DATASET == 'ml_100k' or DATASET == 'douban':
     NUMCLASSES = 5
 elif DATASET == 'ml_10m':
@@ -133,6 +136,7 @@ elif DATASET == 'yahoo_music':
 
 # Splitting dataset in training, validation and test set
 
+# 根据是否要使用feature来决定目录
 if DATASET == 'ml_1m' or DATASET == 'ml_10m':
     if FEATURES:
         datasplit_path = 'data/' + DATASET + '/withfeatures_split_seed' + str(DATASEED) + '.pickle'
@@ -143,7 +147,7 @@ elif FEATURES:
 else:
     datasplit_path = 'data/' + DATASET + '/nofeatures.pickle'
 
-
+# 开始加载数据集
 if DATASET == 'flixster' or DATASET == 'douban' or DATASET == 'yahoo_music':
     u_features, v_features, adj_train, train_labels, train_u_indices, train_v_indices, \
         val_labels, val_u_indices, val_v_indices, test_labels, \
@@ -314,6 +318,7 @@ placeholders = {
 }
 
 # create model
+# 如果引入了特征，就用sideInfo
 if FEATURES:
     model = RecommenderSideInfoGAE(placeholders,
                                    input_dim=u_features.shape[1],
@@ -329,6 +334,7 @@ if FEATURES:
                                    learning_rate=LR,
                                    num_side_features=num_side_features,
                                    logging=True)
+# 否则用普通的GAE
 else:
     model = RecommenderGAE(placeholders,
                            input_dim=u_features.shape[1],
